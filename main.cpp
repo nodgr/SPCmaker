@@ -41,7 +41,7 @@ const char* acag2jcc(const char* acag){
 
 int main(){
   const char* prefixs[22] = {"JA","JD","JE","JF","JG","JH","JI","JJ","JK","JL","JM","JN","JO","JP","JQ","JR","JS","7J","7K","7L","7M","7N"};
-  const char* suf1st[24] = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X"};
+  const char* suf1st[26] = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
         // curl setting
         CURL *curl = curl_easy_init();
         if(curl == nullptr){
@@ -51,9 +51,9 @@ int main(){
         }
 
 
-  for (int i=0;i<22;i++){
-    for (int j=0;j<10;j++){
-      for(int k=0;k<24;k++){
+  for (int i=0;i<22;i++){// prefix
+    for (int j=0;j<10;j++){// area
+      for(int k=0;k<26;k++){// suffix1st
 
         ofstream fout("out.spc", std::ios::app); // open .spc file
 
@@ -63,9 +63,9 @@ int main(){
         }
 
         // send HTTP request
-        string baseURL = "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=0&DC=3&SC=0&OW=AT&MA=";
+        string baseURL = k<24 ? "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=0&DC=3&SC=0&OW=AT&MA=" : "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=1&DC=2&SC=0&OW=AT&MA=";
 
-        string URL = baseURL + (string)prefixs[i] + std::to_string(j) + (string)suf1st[k];//stringで結合
+        string URL = baseURL + (string)prefixs[i] + std::to_string(j) + (string)suf1st[k];
 
         std::vector<char> responseData;
 
@@ -94,11 +94,23 @@ int main(){
           if (std::atoi(num.c_str()) != 0){ // skip non-existing prefixes
             picojson::array musens = v.get<picojson::object>()["musen"].get<picojson::array>();
             for(picojson::array::iterator it = musens.begin(); it != musens.end(); it++){
-              std::string callsign = it->get<picojson::object>()["listInfo"].get<picojson::object>()["name"].get<std::string>();
+
+              std::string callsign = k<24 ? it->get<picojson::object>()["listInfo"].get<picojson::object>()["name"].get<std::string>() : it->get<picojson::object>()["detailInfo"].get<picojson::object>()["identificationSignals"].get<std::string>() ;
               std::string acag = it->get<picojson::object>()["listInfo"].get<picojson::object>()["tdfkCd"].get<std::string>();
-              fout << callsign.substr(18,6).c_str()<< " " <<acag2jcc(acag.c_str()) << endl;
+
+              std::string cutCallsign = k<24 ? callsign.substr(18,6) : callsign.substr(0,6) ;
+
+              fout << cutCallsign.c_str()<< " " <<acag2jcc(acag.c_str()) << endl;
             }
             std::cout << "Written " << prefixs[i] << j << suf1st[k] << " to spc." <<endl;
+          }else{
+            j++; // go on to next prefix
+            if(j>9) {
+              i++;
+              if(i==22) return 0; // checked until 7N5 -> finish
+              j=0;
+            }
+            k=-1; // reset suffix
           }
           fout.close();
         }
