@@ -63,7 +63,7 @@ int main(){
         }
 
         // send HTTP request
-        string baseURL = k<24 ? "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=0&DC=3&SC=0&OW=AT&MA=" : "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=1&DC=2&SC=0&OW=AT&MA=";
+        string baseURL = k<24 ? "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=0&DC=3&SC=0&OW=AT&MA=" : "https://www.tele.soumu.go.jp/musen/list?ST=1&OF=2&DA=1&DC=2&SC=0&OW=AT&MA="; // when checking club, use detail mode
 
         string URL = baseURL + (string)prefixs[i] + std::to_string(j) + (string)suf1st[k];
 
@@ -114,7 +114,7 @@ int main(){
           }
           fout.close();
         }
-        sleep(1);// wait 1 sec in order not to "attack" API
+        sleep(1);// wait 1 sec
       }
     }
   }
